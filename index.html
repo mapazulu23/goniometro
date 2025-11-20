@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Goniómetro – Ángulo del Hombro</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 650px; margin: auto; padding: 20px; }
+    canvas { max-width: 100%; }
+    .dato { font-size: 1.7em; margin-top: 15px; }
+    button { padding: 10px; margin-top: 20px; font-size: 1em; }
+  </style>
+</head>
+<body>
+
+  <h1>📏 Goniómetro del Hombro</h1>
+
+  <div class="dato">Ángulo actual: <strong><span id="angulo">--</span>°</strong></div>
+  <div class="dato">Movimiento: <strong><span id="movimiento">--</span></strong></div>
+  <div class="dato">Última lectura: <span id="info">--</span></div>
+
+  <canvas id="grafica"></canvas>
+
+  <button onclick="abrirSheets()">Abrir base de datos</button>
+
+<script>
+  // URL JSON de tu Google Sheets
+  const sheetURL =
+    "https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/gviz/tq?tqx=out:json&gid=0";
+
+  function abrirSheets() {
+    window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
+  }
+
+  // Configuración de la gráfica
+  const ctx = document.getElementById('grafica').getContext('2d');
+  const datosGrafica = {
+    labels: [],
+    datasets: [{
+      label: 'Ángulo (°)',
+      data: [],
+      borderColor: 'rgb(75, 192, 192)',
+      borderWidth: 2,
+      tension: 0.2
+    }]
+  };
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: datosGrafica,
+    options: {
+      scales: {
+        y: { min: 0, max: 150 }
+      }
+    }
+  });
+
+  // Función para leer datos del Sheets
+  async function leerDatos() {
+    const res = await fetch(sheetURL);
+    const text = await res.text();
+
+    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    const rows = json.table.rows;
+    const ult = rows[rows.length - 1].c;
+
+    // Extraer valores reales según tu estructura
+    const fecha = ult[0]?.v || "";
+    const paciente = ult[1]?.v || "";
+    const angulo = ult[2]?.v || 0;
+    const movimiento = ult[3]?.v || "";
+    const lecturaVoltaje = ult[4]?.v || "";
+
+    // Mostrar en pantalla
+    document.getElementById('angulo').innerText = angulo;
+    document.getElementById('movimiento').innerText = movimiento;
+    document.getElementById('info').innerText =
+      `${fecha} – ${lecturaVoltaje}`;
+
+    // Actualizar gráfica
+    datosGrafica.labels.push("");
+    datosGrafica.datasets[0].data.push(Number(angulo));
+
+    if (datosGrafica.labels.length > 25) {
+      datosGrafica.labels.shift();
+      datosGrafica.datasets[0].data.shift();
+    }
+
+    chart.update();
+  }
+
+  // Leer datos cada 2 segundos
+  setInterval(leerDatos, 2000);
+</script>
+
+</body>
+</html>
