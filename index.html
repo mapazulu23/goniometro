@@ -24,74 +24,68 @@
   <button onclick="abrirSheets()">Abrir base de datos</button>
 
 <script>
-  // URL JSON de tu Google Sheets
-  const sheetURL =
-    "https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/gviz/tq?tqx=out:json&gid=0";
+let angles = [];
+let voltages = [];
 
-  function abrirSheets() {
-    window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
-  }
+// ====== FUNCIÓN PARA ACTUALIZAR GRAFICA ======
+function updateChart() {
+    const ctx = document.getElementById('myChart').getContext('2d');
+    if (window.myChart) window.myChart.destroy();
 
-  // Configuración de la gráfica
-  const ctx = document.getElementById('grafica').getContext('2d');
-  const datosGrafica = {
-    labels: [],
-    datasets: [{
-      label: 'Ángulo (°)',
-      data: [],
-      borderColor: 'rgb(75, 192, 192)',
-      borderWidth: 2,
-      tension: 0.2
-    }]
-  };
+    window.myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: angles,   // ÁNGULO EN EL EJE X
+            datasets: [{
+                label: 'Voltaje (V)',   // VOLTAJE EN EJE Y
+                data: voltages,
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Ángulo (grados)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Voltaje (V)'
+                    },
+                    min: 0,
+                    max: 3.3  // MAX VOLTAJE ESP32
+                }
+            }
+        }
+    });
+}
 
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: datosGrafica,
-    options: {
-      scales: {
-        y: { min: 0, max: 150 }
-      }
-    }
-  });
+// ====== FUNCIÓN PARA LEER GOOGLE SHEETS ======
+async function leerDatos() {
+    const url = "AQUÍ TU URL DEL APPS SCRIPT";
 
-  // Función para leer datos del Sheets
-  async function leerDatos() {
-    const res = await fetch(sheetURL);
-    const text = await res.text();
+    const res = await fetch(url);
+    const data = await res.json();  // Asumiendo que tu script devuelve JSON
 
-    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    const rows = json.table.rows;
-    const ult = rows[rows.length - 1].c;
+    angles = [];
+    voltages = [];
 
-    // Extraer valores reales según tu estructura
-    const fecha = ult[0]?.v || "";
-    const paciente = ult[1]?.v || "";
-    const angulo = ult[2]?.v || 0;
-    const movimiento = ult[3]?.v || "";
-    const lecturaVoltaje = ult[4]?.v || "";
+    data.forEach(row => {
+        angles.push(Number(row.angulo));
+        voltages.push(Number(row.voltaje));
+    });
 
-    // Mostrar en pantalla
-    document.getElementById('angulo').innerText = angulo;
-    document.getElementById('movimiento').innerText = movimiento;
-    document.getElementById('info').innerText =
-      `${fecha} – ${lecturaVoltaje}`;
+    updateChart();
+}
 
-    // Actualizar gráfica
-    datosGrafica.labels.push("");
-    datosGrafica.datasets[0].data.push(Number(angulo));
-
-    if (datosGrafica.labels.length > 25) {
-      datosGrafica.labels.shift();
-      datosGrafica.datasets[0].data.shift();
-    }
-
-    chart.update();
-  }
-
-  // Leer datos cada 2 segundos
-  setInterval(leerDatos, 2000);
+// LLAMAR CADA 5 SEGUNDOS
+setInterval(leerDatos, 5000);
 </script>
 
 </body>
 </html>
+
