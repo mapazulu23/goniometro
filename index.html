@@ -84,7 +84,7 @@ function updateChart() {
 // =======================
 async function leerDatos() {
   try {
-    const url = "PEGAR_AQUI_TU_URL_DEL_APPS_SCRIPT";
+    const url = "https://script.google.com/macros/s/AKfycbyCm2vGytoFrfHe8uwqQaU8Az0Mip0x5weZH6k-YMhPuf2IKZlo6gM0otD8YO9a66vK7Q/exec";
 
     const res = await fetch(url);
     const data = await res.json();
@@ -128,3 +128,4 @@ setInterval(leerDatos, 5000);
 
 </body>
 </html>
+
