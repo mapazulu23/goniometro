@@ -48,7 +48,7 @@ let voltages = [];
 //   ACTUALIZAR GRÁFICA
 // =======================
 function updateChart() {
-  const ctx = document.getElementById('grafica').getContext('2d');  // ID correcto
+  const ctx = document.getElementById('grafica').getContext('2d');
 
   if (window.myChart) window.myChart.destroy();
 
@@ -83,24 +83,33 @@ function updateChart() {
 //    LEER GOOGLE SHEETS
 // =======================
 async function leerDatos() {
-    const url = "AQUÍ TU URL DEL APPS SCRIPT";
+  try {
+    const url = "PEGAR_AQUI_TU_URL_DEL_APPS_SCRIPT";
 
     const res = await fetch(url);
     const data = await res.json();
 
-    // Convertir y ordenar por ángulo
-    let datosOrdenados = data.map(r => ({
-        angulo: Number(r.angulo),
-        voltaje: Number(r.observaciones.split(" ")[2].replace("V","")) // si tu voltaje está dentro de observaciones
-    }));
+    let datosOrdenados = data.map(r => {
+      // extraer voltaje desde observaciones → "Lectura #X - Y.YYV"
+      let volt = 0;
+      if (r.observaciones.includes("V")) {
+        volt = Number(r.observaciones.split(" ")[2].replace("V",""));
+      }
 
+      return {
+        angulo: Number(r.angulo),
+        voltaje: volt
+      };
+    });
+
+    // Ordenar por ángulo
     datosOrdenados.sort((a, b) => a.angulo - b.angulo);
 
-    // Rellenar los arreglos ya ordenados
     angles = datosOrdenados.map(d => d.angulo);
     voltages = datosOrdenados.map(d => d.voltaje);
 
     updateChart();
+
   } catch (e) {
     console.log("Error leyendo datos:", e);
   }
@@ -119,6 +128,3 @@ setInterval(leerDatos, 5000);
 
 </body>
 </html>
-
-
-
