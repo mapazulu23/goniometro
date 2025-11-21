@@ -4,13 +4,30 @@
   <meta charset="UTF-8">
   <title>Goniómetro – Ángulo del Hombro</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; max-width: 650px; margin: auto; padding: 20px; }
-    canvas { max-width: 100%; }
-    .dato { font-size: 1.7em; margin-top: 15px; }
-    button { padding: 10px; margin-top: 20px; font-size: 1em; }
+    body { 
+      font-family: Arial, sans-serif; 
+      max-width: 650px; 
+      margin: auto; 
+      padding: 20px; 
+    }
+    canvas { 
+      max-width: 100%; 
+      margin-top: 25px;
+    }
+    .dato { 
+      font-size: 1.5em; 
+      margin-top: 12px; 
+    }
+    button { 
+      padding: 10px; 
+      margin-top: 20px; 
+      font-size: 1em; 
+    }
   </style>
 </head>
+
 <body>
 
   <h1>📏 Goniómetro del Hombro</h1>
@@ -27,65 +44,81 @@
 let angles = [];
 let voltages = [];
 
-// ====== FUNCIÓN PARA ACTUALIZAR GRAFICA ======
+// =======================
+//   ACTUALIZAR GRÁFICA
+// =======================
 function updateChart() {
-    const ctx = document.getElementById('myChart').getContext('2d');
-    if (window.myChart) window.myChart.destroy();
+  const ctx = document.getElementById('grafica').getContext('2d');  // ID correcto
 
-    window.myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: angles,   // ÁNGULO EN EL EJE X
-            datasets: [{
-                label: 'Voltaje (V)',   // VOLTAJE EN EJE Y
-                data: voltages,
-                borderWidth: 2,
-                tension: 0.3
-            }]
+  if (window.myChart) window.myChart.destroy();
+
+  window.myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: angles,
+      datasets: [{
+        label: 'Voltaje (V)',
+        data: voltages,
+        borderWidth: 2,
+        borderColor: 'blue',
+        tension: 0.3
+      }]
+    },
+    options: {
+      scales: {
+        x: {
+          title: { display: true, text: 'Ángulo (°)' }
         },
-        options: {
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Ángulo (grados)'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Voltaje (V)'
-                    },
-                    min: 0,
-                    max: 3.3  // MAX VOLTAJE ESP32
-                }
-            }
+        y: {
+          title: { display: true, text: 'Voltaje (V)' },
+          min: 0,
+          max: 3.3
         }
-    });
+      }
+    }
+  });
 }
 
-// ====== FUNCIÓN PARA LEER GOOGLE SHEETS ======
+// =======================
+//    LEER GOOGLE SHEETS
+// =======================
 async function leerDatos() {
-    const url = "AQUÍ TU URL DEL APPS SCRIPT";
 
+  const url = "AQUI_PEGA_TU_URL_DEL_APPS_SCRIPT";  // <-- CAMBIAR
+
+  try {
     const res = await fetch(url);
-    const data = await res.json();  // Asumiendo que tu script devuelve JSON
+    const data = await res.json();
 
     angles = [];
     voltages = [];
 
     data.forEach(row => {
-        angles.push(Number(row.angulo));
-        voltages.push(Number(row.voltaje));
+      angles.push(Number(row.angulo));
+      voltages.push(Number(row.voltaje));
+
+      document.getElementById("angulo").textContent = row.angulo;
+      document.getElementById("movimiento").textContent = row.movimiento;
+      document.getElementById("info").textContent = row.observaciones;
     });
 
     updateChart();
+
+  } catch (e) {
+    console.log("Error leyendo datos:", e);
+  }
 }
 
-// LLAMAR CADA 5 SEGUNDOS
+// =======================
+//     ABRIR SHEETS
+// =======================
+function abrirSheets() {
+  window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
+}
+
+// Ejecutar cada 5 segundos
 setInterval(leerDatos, 5000);
 </script>
 
 </body>
 </html>
-
