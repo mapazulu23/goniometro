@@ -45,7 +45,7 @@ let xyData = [];  // Datos XY {x: voltaje, y: ángulo}
 
 async function leerDatos() {
   try {
-    const url = "AQUI_PONES_TU_URL_DEL_SCRIPT";   // <---- CAMBIA ESTO
+    const url = "https://script.google.com/macros/s/AKfycbyO14bbwVS1_Lyah6jXqBQOle7gTg05sbm8KlRyPH2k1f61D3BsnHYRp6SRhN_8dVo07w/exec";  
 
     const res = await fetch(url);
     const data = await res.json();
@@ -126,3 +126,4 @@ setInterval(leerDatos, 3000);
 </script>
 </body>
 </html>
+
