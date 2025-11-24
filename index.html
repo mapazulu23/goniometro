@@ -104,7 +104,7 @@ function updateChart() {
 // =======================
 async function leerDatos() {
   try {
-    const url = "https://script.google.com/macros/s/AKfycbxQXryKcVoo-Pv_lr5cMnBxRnLoECB_ur9DN-b8bn3v5vDE7mdkgPQ2N5P8W2ixm-5KEQ/exec";
+    const url = "https://script.google.com/macros/s/AKfycbyO14bbwVS1_Lyah6jXqBQOle7gTg05sbm8KlRyPH2k1f61D3BsnHYRp6SRhN_8dVo07w/exec";
 
     const res = await fetch(url);
     const data = await res.json();
@@ -152,5 +152,6 @@ setInterval(leerDatos, 5000);
 
 </body>
 </html>
+
 
 
