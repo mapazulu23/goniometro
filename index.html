@@ -4,13 +4,50 @@
   <meta charset="UTF-8">
   <title>Goniómetro – Ángulo del Hombro</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; max-width: 650px; margin: auto; padding: 20px; }
-    canvas { max-width: 100%; }
-    .dato { font-size: 1.7em; margin-top: 15px; }
-    button { padding: 10px; margin-top: 20px; font-size: 1em; }
+    body { 
+      font-family: Arial, sans-serif; 
+      max-width: 700px; 
+      margin: auto; 
+      padding: 25px; 
+      background: #f7f9fc;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .dato { 
+      font-size: 1.5em; 
+      margin-top: 12px;
+      padding-left: 10px;
+    }
+    #grafica {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    button { 
+      padding: 12px 20px; 
+      margin-top: 25px; 
+      font-size: 1em; 
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+      background: #1e88e5;
+      color: white;
+    }
+    button:hover {
+      background: #1669b2;
+    }
   </style>
 </head>
+
 <body>
 
   <h1>📏 Goniómetro del Hombro</h1>
@@ -24,24 +61,32 @@
   <button onclick="abrirSheets()">Abrir base de datos</button>
 
 <script>
-  // URL JSON de tu Google Sheets
+  // =============================
+  // URL del Google Sheets
+  // =============================
   const sheetURL =
     "https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/gviz/tq?tqx=out:json&gid=0";
 
   function abrirSheets() {
-    window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
+    window.open(
+      "https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing",
+      "_blank"
+    );
   }
 
-  // Configuración de la gráfica
+  // =============================
+  // Gráfica
+  // =============================
+
   const ctx = document.getElementById('grafica').getContext('2d');
   const datosGrafica = {
     labels: [],
     datasets: [{
       label: 'Ángulo (°)',
       data: [],
-      borderColor: 'rgb(75, 192, 192)',
-      borderWidth: 2,
-      tension: 0.2
+      borderColor: 'rgb(30, 136, 229)',
+      borderWidth: 3,
+      tension: 0.25
     }]
   };
 
@@ -50,46 +95,70 @@
     data: datosGrafica,
     options: {
       scales: {
-        y: { min: 0, max: 150 }
+        y: { min: 0, max: 180 }
       }
     }
   });
 
-  // Función para leer datos del Sheets
-  async function leerDatos() {
-    const res = await fetch(sheetURL);
-    const text = await res.text();
-
-    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    const rows = json.table.rows;
-    const ult = rows[rows.length - 1].c;
-
-    // Extraer valores reales según tu estructura
-    const fecha = ult[0]?.v || "";
-    const paciente = ult[1]?.v || "";
-    const angulo = ult[2]?.v || 0;
-    const movimiento = ult[3]?.v || "";
-    const lecturaVoltaje = ult[4]?.v || "";
-
-    // Mostrar en pantalla
-    document.getElementById('angulo').innerText = angulo;
-    document.getElementById('movimiento').innerText = movimiento;
-    document.getElementById('info').innerText =
-      `${fecha} – ${lecturaVoltaje}`;
-
-    // Actualizar gráfica
-    datosGrafica.labels.push("");
-    datosGrafica.datasets[0].data.push(Number(angulo));
-
-    if (datosGrafica.labels.length > 25) {
-      datosGrafica.labels.shift();
-      datosGrafica.datasets[0].data.shift();
-    }
-
-    chart.update();
+  // =============================
+  // Función para formatear fecha
+  // =============================
+  function formatearFecha(fechaISO) {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString("es-CO", {
+      weekday: "long",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
   }
 
-  // Leer datos cada 2 segundos
+  // =============================
+  // Leer datos del Sheets
+  // =============================
+  async function leerDatos() {
+    try {
+      const res = await fetch(sheetURL);
+      const text = await res.text();
+
+      const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+      const rows = json.table.rows;
+
+      const ult = rows[rows.length - 1].c;
+
+      // Campos del Sheets
+      const fecha = ult[0]?.v || "";
+      const angulo = ult[2]?.v || 0;
+      const movimiento = ult[3]?.v || "";
+      const lecturaVoltaje = ult[4]?.v || "";
+
+      // Mostrar datos en pantalla
+      document.getElementById('angulo').innerText = angulo;
+      document.getElementById('movimiento').innerText = movimiento;
+
+      document.getElementById('info').innerText =
+        `${formatearFecha(fecha)} — ${lecturaVoltaje}`;
+
+      // Actualizar gráfica
+      datosGrafica.labels.push("");
+      datosGrafica.datasets[0].data.push(Number(angulo));
+
+      if (datosGrafica.labels.length > 30) {
+        datosGrafica.labels.shift();
+        datosGrafica.datasets[0].data.shift();
+      }
+
+      chart.update();
+
+    } catch (err) {
+      console.error("Error leyendo Google Sheets:", err);
+    }
+  }
+
+  // Leer cada 2 segundos
   setInterval(leerDatos, 2000);
 </script>
 
