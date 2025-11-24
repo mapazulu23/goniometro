@@ -41,11 +41,12 @@
   <button onclick="abrirSheets()">Abrir base de datos</button>
 
 <script>
-let angles = [];
-let voltages = [];
+let angles = []; // Se mantiene por si se usa en otro lado, pero no para la gráfica
+let voltages = []; // Se mantiene por si se usa en otro lado, pero no para la gráfica
+let xyData = []; // NUEVA variable para datos en formato {x: Voltaje, y: Ángulo}
 
 // =======================
-//   ACTUALIZAR GRÁFICA
+//     ACTUALIZAR GRÁFICA
 // =======================
 function updateChart() {
   const ctx = document.getElementById('grafica').getContext('2d');
@@ -55,10 +56,10 @@ function updateChart() {
   window.myChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: angles,
+      // Ya no se necesita 'labels', los datos se pasan directamente en el array 'data'
       datasets: [{
         label: 'Voltaje (V)',
-        data: voltages,
+        data: xyData, // Usamos la nueva estructura {x: Voltaje, y: Ángulo}
         borderWidth: 2,
         borderColor: 'blue',
         tension: 0.3
@@ -67,12 +68,16 @@ function updateChart() {
     options: {
       scales: {
         x: {
-          title: { display: true, text: 'Ángulo (°)' }
+          type: 'linear', // ESCALA LINEAL para valores numéricos (Voltaje)
+          title: { display: true, text: 'Voltaje (V)' }, // Eje X: Voltaje
+          min: 0, // Mínimo de Voltaje
+          max: 3.3 // Máximo de Voltaje (por defecto)
         },
         y: {
-          title: { display: true, text: 'Voltaje (V)' },
-          min: 0,
-          max: 3.3
+          type: 'linear', // ESCALA LINEAL para valores numéricos (Ángulo)
+          title: { display: true, text: 'Ángulo (°)' }, // Eje Y: Ángulo
+          min: 0, // Rango de ángulo: Mínimo 0°
+          max: 180 // Rango de ángulo: Máximo 180° (para intervalos fijos)
         }
       }
     }
@@ -80,7 +85,7 @@ function updateChart() {
 }
 
 // =======================
-//    LEER GOOGLE SHEETS
+//     LEER GOOGLE SHEETS
 // =======================
 async function leerDatos() {
   try {
@@ -102,11 +107,17 @@ async function leerDatos() {
       };
     });
 
-    // Ordenar por ángulo
-    datosOrdenados.sort((a, b) => a.angulo - b.angulo);
+    // IMPORTANTE: Ordenar por el nuevo eje X (voltaje) para evitar líneas cruzadas
+    datosOrdenados.sort((a, b) => a.voltaje - b.voltaje);
 
     angles = datosOrdenados.map(d => d.angulo);
     voltages = datosOrdenados.map(d => d.voltaje);
+
+    // Preparar los datos en formato XY: {x: Voltaje, y: Ángulo}
+    xyData = datosOrdenados.map(d => ({
+      x: d.voltaje, // Voltaje en el eje X
+      y: d.angulo   // Ángulo en el eje Y
+    }));
 
     updateChart();
 
@@ -116,7 +127,7 @@ async function leerDatos() {
 }
 
 // =======================
-//     ABRIR SHEETS
+//      ABRIR SHEETS
 // =======================
 function abrirSheets() {
   window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
@@ -125,7 +136,3 @@ function abrirSheets() {
 // Ejecutar cada 5 segundos
 setInterval(leerDatos, 5000);
 </script>
-
-</body>
-</html>
-
