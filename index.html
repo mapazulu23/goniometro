@@ -6,64 +6,92 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      max-width: 700px; 
-      margin: auto; 
-      padding: 25px; 
-      background: #f7f9fc;
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f3f6fa;
+      margin: 0;
+      padding: 0;
     }
+
+    .container {
+      max-width: 750px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
+      font-size: 2.2em;
+      color: #1a237e;
     }
-    .dato { 
-      font-size: 1.5em; 
-      margin-top: 12px;
-      padding-left: 10px;
-    }
-    #grafica {
+
+    .card {
       background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 25px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      padding: 18px 22px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+      margin-bottom: 18px;
     }
-    button { 
-      padding: 12px 20px; 
-      margin-top: 25px; 
-      font-size: 1em; 
+
+    .dato {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    strong {
+      color: #1e88e5;
+    }
+
+    .graph-card {
+      padding: 25px;
+    }
+
+    button {
       display: block;
-      margin-left: auto;
-      margin-right: auto;
-      cursor: pointer;
-      border-radius: 6px;
-      border: none;
+      width: 100%;
       background: #1e88e5;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
       color: white;
+      font-size: 1.1em;
+      margin-top: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
     }
+
     button:hover {
-      background: #1669b2;
+      background: #0d47a1;
     }
   </style>
 </head>
 
 <body>
+<div class="container">
 
   <h1>📏 Goniómetro del Hombro</h1>
 
-  <div class="dato">Ángulo actual: <strong><span id="angulo">--</span>°</strong></div>
-  <div class="dato">Movimiento: <strong><span id="movimiento">--</span></strong></div>
-  <div class="dato">Última lectura: <span id="info">--</span></div>
+  <div class="card">
+    <div class="dato">Ángulo actual: <strong><span id="angulo">--</span>°</strong></div>
+    <div class="dato">Movimiento: <strong><span id="movimiento">--</span></strong></div>
+    <div class="dato">Última lectura: <span id="info">--</span></div>
+  </div>
 
-  <canvas id="grafica"></canvas>
+  <div class="card graph-card">
+    <canvas id="grafica"></canvas>
+  </div>
 
-  <button onclick="abrirSheets()">Abrir base de datos</button>
+  <button onclick="abrirSheets()">📄 Abrir base de datos</button>
+
+</div>
 
 <script>
-  // =============================
-  // URL del Google Sheets
-  // =============================
+  // ================================
+  // URL de tu Google Sheets
+  // ================================
   const sheetURL =
     "https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/gviz/tq?tqx=out:json&gid=0";
 
@@ -74,17 +102,17 @@
     );
   }
 
-  // =============================
+  // ================================
   // Gráfica
-  // =============================
-
+  // ================================
   const ctx = document.getElementById('grafica').getContext('2d');
+
   const datosGrafica = {
     labels: [],
     datasets: [{
       label: 'Ángulo (°)',
       data: [],
-      borderColor: 'rgb(30, 136, 229)',
+      borderColor: '#1e88e5',
       borderWidth: 3,
       tension: 0.25
     }]
@@ -95,54 +123,39 @@
     data: datosGrafica,
     options: {
       scales: {
-        y: { min: 0, max: 180 }
+        y: {
+          min: 0,
+          max: 180,
+          ticks: { color: "#333" }
+        },
+        x: { ticks: { color: "#333" } }
       }
     }
   });
 
-  // =============================
-  // Función para formatear fecha
-  // =============================
-  function formatearFecha(fechaISO) {
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleString("es-CO", {
-      weekday: "long",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
-    });
-  }
-
-  // =============================
-  // Leer datos del Sheets
-  // =============================
+  // ================================
+  // Leer datos de Google Sheets
+  // ================================
   async function leerDatos() {
     try {
       const res = await fetch(sheetURL);
       const text = await res.text();
 
-      const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+      const json = JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1));
       const rows = json.table.rows;
-
       const ult = rows[rows.length - 1].c;
 
-      // Campos del Sheets
       const fecha = ult[0]?.v || "";
       const angulo = ult[2]?.v || 0;
       const movimiento = ult[3]?.v || "";
       const lecturaVoltaje = ult[4]?.v || "";
 
       // Mostrar datos en pantalla
-      document.getElementById('angulo').innerText = angulo;
-      document.getElementById('movimiento').innerText = movimiento;
+      document.getElementById("angulo").innerText = angulo;
+      document.getElementById("movimiento").innerText = movimiento;
+      document.getElementById("info").innerText = `${fecha} — ${lecturaVoltaje}`;
 
-      document.getElementById('info').innerText =
-        `${formatearFecha(fecha)} — ${lecturaVoltaje}`;
-
-      // Actualizar gráfica
+      // Actualizar la gráfica
       datosGrafica.labels.push("");
       datosGrafica.datasets[0].data.push(Number(angulo));
 
@@ -153,12 +166,11 @@
 
       chart.update();
 
-    } catch (err) {
-      console.error("Error leyendo Google Sheets:", err);
+    } catch (e) {
+      console.error("Error al leer datos:", e);
     }
   }
 
-  // Leer cada 2 segundos
   setInterval(leerDatos, 2000);
 </script>
 
