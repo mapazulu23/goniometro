@@ -11,19 +11,36 @@
       max-width: 650px; 
       margin: auto; 
       padding: 20px; 
+      background: #f8f9fa;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
     }
     canvas { 
       max-width: 100%; 
       margin-top: 25px;
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
     .dato { 
-      font-size: 1.5em; 
+      font-size: 1.4em; 
       margin-top: 12px; 
     }
     button { 
-      padding: 10px; 
+      padding: 10px 20px; 
       margin-top: 20px; 
       font-size: 1em; 
+      cursor: pointer;
+      background: #007bff;
+      border: none;
+      color: white;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
@@ -41,12 +58,10 @@
   <button onclick="abrirSheets()">Abrir base de datos</button>
 
 <script>
-let angles = []; // Se mantiene por si se usa en otro lado, pero no para la gráfica
-let voltages = []; // Se mantiene por si se usa en otro lado, pero no para la gráfica
-let xyData = []; // NUEVA variable para datos en formato {x: Voltaje, y: Ángulo}
+let xyData = []; // Datos XY en formato [{x: voltaje, y: angulo}]
 
 // =======================
-//     ACTUALIZAR GRÁFICA
+//   ACTUALIZAR GRÁFICA
 // =======================
 function updateChart() {
   const ctx = document.getElementById('grafica').getContext('2d');
@@ -56,28 +71,28 @@ function updateChart() {
   window.myChart = new Chart(ctx, {
     type: 'line',
     data: {
-      // Ya no se necesita 'labels', los datos se pasan directamente en el array 'data'
       datasets: [{
-        label: 'Ángulo (°)', // ¡CAMBIO APLICADO AQUÍ!
-        data: xyData, // Usamos la nueva estructura {x: Voltaje, y: Ángulo}
+        label: 'Ángulo (°)',
+        data: xyData,
         borderWidth: 2,
         borderColor: 'blue',
-        tension: 0.3
+        tension: 0.3,
+        pointRadius: 3
       }]
     },
     options: {
       scales: {
         x: {
-          type: 'linear', // ESCALA LINEAL para valores numéricos (Voltaje)
-          title: { display: true, text: 'Voltaje (V)' }, // Eje X: Voltaje
-          min: 0, // Mínimo de Voltaje
-          max: 3.3 // Máximo de Voltaje (por defecto)
+          type: 'linear',
+          title: { display: true, text: 'Voltaje (V)' },
+          min: 0,
+          max: 3.3
         },
         y: {
-          type: 'linear', // ESCALA LINEAL para valores numéricos (Ángulo)
-          title: { display: true, text: 'Ángulo (°)' }, // Eje Y: Ángulo
-          min: 0, // Rango de ángulo: Mínimo 0°
-          max: 180 // Rango de ángulo: Máximo 180° (para intervalos fijos)
+          type: 'linear',
+          title: { display: true, text: 'Ángulo (°)' },
+          min: 0,
+          max: 180
         }
       }
     }
@@ -85,18 +100,19 @@ function updateChart() {
 }
 
 // =======================
-//     LEER GOOGLE SHEETS
+//    LEER GOOGLE SHEETS
 // =======================
 async function leerDatos() {
   try {
-    const url = "https://script.google.com/macros/s/AKfycbyCm2vGytoFrfHe8uwqQaU8Az0Mip0x5weZH6k-YMhPuf2IKZlo6gM0otD8YO9a66vK7Q/exec";
+    const url = "https://script.google.com/macros/s/AKfycbxQXryKcVoo-Pv_lr5cMnBxRnLoECB_ur9DN-b8bn3v5vDE7mdkgPQ2N5P8W2ixm-5KEQ/exec";
 
     const res = await fetch(url);
     const data = await res.json();
 
     let datosOrdenados = data.map(r => {
-      // extraer voltaje desde observaciones → "Lectura #X - Y.YYV"
       let volt = 0;
+
+      // "Lectura #X - Y.YYV"
       if (r.observaciones.includes("V")) {
         volt = Number(r.observaciones.split(" ")[2].replace("V",""));
       }
@@ -107,16 +123,13 @@ async function leerDatos() {
       };
     });
 
-    // IMPORTANTE: Ordenar por el nuevo eje X (voltaje) para evitar líneas cruzadas
+    // Ordenar por voltaje para evitar líneas cruzadas
     datosOrdenados.sort((a, b) => a.voltaje - b.voltaje);
 
-    angles = datosOrdenados.map(d => d.angulo);
-    voltages = datosOrdenados.map(d => d.voltaje);
-
-    // Preparar los datos en formato XY: {x: Voltaje, y: Ángulo}
+    // Crear formato XY para Chart.js
     xyData = datosOrdenados.map(d => ({
-      x: d.voltaje, // Voltaje en el eje X
-      y: d.angulo   // Ángulo en el eje Y
+      x: d.voltaje,
+      y: d.angulo
     }));
 
     updateChart();
@@ -127,7 +140,7 @@ async function leerDatos() {
 }
 
 // =======================
-//      ABRIR SHEETS
+//     ABRIR SHEETS
 // =======================
 function abrirSheets() {
   window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
@@ -136,4 +149,8 @@ function abrirSheets() {
 // Ejecutar cada 5 segundos
 setInterval(leerDatos, 5000);
 </script>
+
+</body>
+</html>
+
 
