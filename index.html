@@ -11,36 +11,19 @@
       max-width: 650px; 
       margin: auto; 
       padding: 20px; 
-      background: #f8f9fa;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 25px;
     }
     canvas { 
       max-width: 100%; 
       margin-top: 25px;
-      background: white;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
     .dato { 
-      font-size: 1.4em; 
+      font-size: 1.5em; 
       margin-top: 12px; 
     }
     button { 
-      padding: 10px 20px; 
+      padding: 10px; 
       margin-top: 20px; 
       font-size: 1em; 
-      cursor: pointer;
-      background: #007bff;
-      border: none;
-      color: white;
-      border-radius: 5px;
-    }
-    button:hover {
-      background: #0056b3;
     }
   </style>
 </head>
@@ -58,11 +41,48 @@
   <button onclick="abrirSheets()">Abrir base de datos</button>
 
 <script>
-let xyData = []; // Datos XY en formato [{x: voltaje, y: angulo}]
+let xyData = [];  // Datos XY {x: voltaje, y: ángulo}
 
-// =======================
-//   ACTUALIZAR GRÁFICA
-// =======================
+async function leerDatos() {
+  try {
+    const url = "AQUI_PONES_TU_URL_DEL_SCRIPT";   // <---- CAMBIA ESTO
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    // Convertir JSON → datos útiles
+    let datos = data.map(r => {
+      let volt = Number(r.observaciones.split(" - ")[1].replace("V",""));
+      return {
+        angulo: Number(r.angulo),
+        voltaje: volt,
+        fecha: r.fecha,
+        movimiento: r.movimiento
+      };
+    });
+
+    // Ordenar por voltaje
+    datos.sort((a, b) => a.voltaje - b.voltaje);
+
+    // Datos para la gráfica
+    xyData = datos.map(d => ({
+      x: d.voltaje,
+      y: d.angulo
+    }));
+
+    // Mostrar última lectura
+    const last = datos[datos.length - 1];
+    document.getElementById("angulo").textContent = last.angulo;
+    document.getElementById("movimiento").textContent = last.movimiento;
+    document.getElementById("info").textContent = new Date(last.fecha).toLocaleString();
+
+    updateChart();
+
+  } catch (e) {
+    console.error("Error leyendo datos:", e);
+  }
+}
+
 function updateChart() {
   const ctx = document.getElementById('grafica').getContext('2d');
 
@@ -76,8 +96,7 @@ function updateChart() {
         data: xyData,
         borderWidth: 2,
         borderColor: 'blue',
-        tension: 0.3,
-        pointRadius: 3
+        tension: 0.3
       }]
     },
     options: {
@@ -99,59 +118,11 @@ function updateChart() {
   });
 }
 
-// =======================
-//    LEER GOOGLE SHEETS
-// =======================
-async function leerDatos() {
-  try {
-    const url = "https://script.google.com/macros/s/AKfycbyO14bbwVS1_Lyah6jXqBQOle7gTg05sbm8KlRyPH2k1f61D3BsnHYRp6SRhN_8dVo07w/exec";
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    let datosOrdenados = data.map(r => {
-      let volt = 0;
-
-      // "Lectura #X - Y.YYV"
-      if (r.observaciones.includes("V")) {
-        volt = Number(r.observaciones.split(" ")[2].replace("V",""));
-      }
-
-      return {
-        angulo: Number(r.angulo),
-        voltaje: volt
-      };
-    });
-
-    // Ordenar por voltaje para evitar líneas cruzadas
-    datosOrdenados.sort((a, b) => a.voltaje - b.voltaje);
-
-    // Crear formato XY para Chart.js
-    xyData = datosOrdenados.map(d => ({
-      x: d.voltaje,
-      y: d.angulo
-    }));
-
-    updateChart();
-
-  } catch (e) {
-    console.log("Error leyendo datos:", e);
-  }
-}
-
-// =======================
-//     ABRIR SHEETS
-// =======================
 function abrirSheets() {
   window.open("https://docs.google.com/spreadsheets/d/1oA7Y6S25lLaQYS1eFGFt5HXr59tSqoAJBTf1w978Ub4/edit?usp=sharing", "_blank");
 }
 
-// Ejecutar cada 5 segundos
-setInterval(leerDatos, 5000);
+setInterval(leerDatos, 3000);
 </script>
-
 </body>
 </html>
-
-
-
